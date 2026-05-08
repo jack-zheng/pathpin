@@ -485,3 +485,42 @@ async function handleSaveConfirm(title: string) {
 7. 确认 Extension storage 里该条目已消失
 
 ---
+
+## T6: Bookmark Panel
+
+### 目标
+点击 🔖 展开书签列表 Panel，支持搜索、跳转、编辑、删除，点击外部关闭。
+
+### 关键概念
+- **`e.composedPath()[0]`**：Shadow DOM 内的事件冒泡到宿主 document 时，`e.target` 只能看到宿主元素（`<pathpin-widget>`），无法判断点击是否在 Panel 内部。`e.composedPath()` 能穿透 Shadow DOM 边界，返回完整的事件路径，`[0]` 就是真实的点击目标。
+- **状态同步**：Panel 删除书签后需通过 `onDeleteBookmark` 回调通知父组件，父组件据此更新星星状态，否则 Panel 和 Widget 的显示会不一致。
+
+### 新增文件
+
+**`Panel.tsx`**：书签列表组件。
+- 搜索：`trim()` 去首尾空格，在 title 和 path 做连续子串匹配（OR）
+- 默认展示按 `usageCount` 降序前 5 条；有搜索词时显示全部匹配结果
+- 跳转：`window.location.href = origin + path`，跳转前调用 `incrementUsage()`
+- 编辑：内联 input，Enter 保存，Escape 取消
+- 外部点击关闭：用 `e.composedPath()[0]` 判断点击目标
+
+### 更新文件
+
+**`index.tsx`**：
+- 新增 `showPanel` state，🔖 点击切换显示/隐藏
+- 传入 `onDeleteBookmark` 回调，Panel 删除当前页面的书签时同步重置星星状态
+
+**`widget.css`**：追加 Panel 样式，定位在悬浮球上方，宽 280px，最大高度 280px 可滚动。
+
+### 手动测试方法
+
+1. `npm run build`，重新加载扩展
+2. 先收藏若干书签，或在 Extension storage 里直接写入测试数据
+3. 点击 🔖 → Panel 展开，显示书签列表（按 usageCount 降序，最多 5 条）
+4. 搜索框输入关键字 → 列表实时过滤（连续子串，不区分大小写）
+5. 点击某条书签 → 跳转到 `origin + path`，`usageCount + 1`
+6. 点击 ✎ → 内联编辑 title，Enter 保存，列表即时更新
+7. 点击 ✕ → 删除该条；若删除的是当前页面的书签，星星同步变空心
+8. 点击 Panel 外部 → Panel 关闭
+
+---

@@ -20,3 +20,8 @@ chrome.storage.local.get('bookmarks').then(r => console.log(r))
 ```
 注意：`.then(console.log)` 会因为 `this` 丢失导致打印 `undefined`，需用箭头函数包一层。
 
+## 代码修改后必须重新 build
+
+每次修改代码后都需要运行 `npm run build`，然后在 `chrome://extensions` 点击刷新按钮重新加载扩展，改动才会生效。
+
+开发时推荐用 `npm run dev`，会自动监听文件变更并重新构建 + 刷新扩展，无需手动操作。

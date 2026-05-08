@@ -102,3 +102,118 @@
 .pathpin-popup-btn.cancel:hover {
   background: #e5e7eb;
 }
+
+/* Bookmark panel */
+.pathpin-panel {
+  position: fixed;
+  bottom: 64px;
+  right: 24px;
+  z-index: 2147483647;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  width: 280px;
+  overflow: hidden;
+}
+
+.pathpin-panel-search {
+  width: 100%;
+  box-sizing: border-box;
+  border: none;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 10px 12px;
+  font-size: 13px;
+  outline: none;
+}
+
+.pathpin-panel-empty {
+  padding: 16px 12px;
+  font-size: 13px;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.pathpin-panel-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.pathpin-panel-item {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  gap: 4px;
+}
+
+.pathpin-panel-item:hover {
+  background: #f9fafb;
+}
+
+.pathpin-panel-link {
+  flex: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  padding: 8px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pathpin-panel-title {
+  font-size: 13px;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.pathpin-panel-path {
+  font-size: 11px;
+  color: #9ca3af;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.pathpin-panel-edit-input {
+  flex: 1;
+  border: 1px solid #6366f1;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 13px;
+  outline: none;
+}
+
+.pathpin-panel-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.pathpin-panel-action {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.pathpin-panel-action:hover {
+  background: #f3f4f6;
+}
+
+.pathpin-panel-action.delete:hover {
+  background: #fee2e2;
+  color: #ef4444;
+}

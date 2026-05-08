@@ -4,6 +4,7 @@ import { getRules, getBookmarks, addBookmark, deleteBookmark } from '../../share
 import { matchesRules } from '../../shared/rules';
 import Widget from './Widget';
 import SavePopup from './SavePopup';
+import Panel from './Panel';
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -32,6 +33,7 @@ function App() {
   const [isStarred, setIsStarred] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
+  const [showPanel, setShowPanel] = useState(false);
 
   useEffect(() => {
     async function check() {
@@ -73,10 +75,11 @@ function App() {
           onCancel={() => setShowPopup(false)}
         />
       )}
+      {showPanel && <Panel onClose={() => setShowPanel(false)} onDeleteBookmark={id => { if (id === savedId) { setIsStarred(false); setSavedId(null); } }} />}
       <Widget
         isStarred={isStarred}
         onStarClick={handleStarClick}
-        onBookmarkClick={() => {/* T6 */}}
+        onBookmarkClick={() => setShowPanel(prev => !prev)}
       />
     </>
   );
