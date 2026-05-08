@@ -649,3 +649,25 @@ return () => {
 6. 拖到边缘 → 不超出视口
 
 ---
+
+## 分享给他人
+
+### 打包
+
+```bash
+npm run build
+npx wxt zip
+```
+
+生成 `.output/pathpin-1.0.0-chrome.zip`，发给对方。
+
+### 安装步骤（接收方）
+
+1. 解压 zip 文件
+2. 打开 `chrome://extensions`
+3. 右上角开启「开发者模式」
+4. 点击「加载已解压的扩展程序」，选择解压后的目录
+
+### 注意
+
+Chrome 禁止直接安装未经 Web Store 签名的 `.zip` / `.crx` 文件，必须解压后以开发者模式加载，这是 Google 的安全限制无法绕过。如需更方便的分发方式，需要发布到 Chrome Web Store。
