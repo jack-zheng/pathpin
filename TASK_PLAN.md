@@ -73,15 +73,6 @@ interface Rule { id: string; type: 'url_contains' | 'title_contains'; value: str
 - `addRule({type, value})` / `updateRule(id, changes)` / `deleteRule(id)`
 - `exportData()` / `importData(json, mode)` (mode: 'overwrite' | 'merge')
 
-**Testing:**
-1. 打开 `chrome://extensions`，点击扩展的 "Service Worker" 打开 DevTools console
-2. 执行：`chrome.storage.local.clear(() => console.log('cleared'))`
-3. 在 options 页面（或 console）调用 `addBookmark({title:'Test', path:'/foo'})`
-4. 调用 `getBookmarks()` 确认返回包含新增项，`usageCount=0`，有 `id` 和 `createdAt`
-5. 调用 `incrementUsage(id)` 后再 `getBookmarks()`，确认 `usageCount=1`
-6. 调用 `updateBookmark(id, {title:'Updated'})` 后确认 title 已更改
-7. 调用 `deleteBookmark(id)` 后确认列表不含该项
-
 ---
 
 ### T3: Environment Rule Matching (`src/shared/rules.ts`)

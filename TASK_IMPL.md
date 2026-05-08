@@ -215,4 +215,115 @@ npm run dev
 
 ---
 
-<!-- T2 及后续任务实现后在此追加 -->
+## T2: Storage Layer
+
+### 目标
+实现 `chrome.storage.local` 的完整 CRUD，供 content script 和 options page 共用。
+
+### 关键概念
+- **`chrome.storage.local`**：扩展专属的本地存储，比 `localStorage` 容量更大（默认 10MB），且在 content script、options page、service worker 之间共享同一个命名空间。
+- **Promise API**：Chrome 107+ 起 `chrome.storage` 原生支持 Promise，可以直接 `await chrome.storage.local.get(...)`，无需回调写法。
+- **`crypto.randomUUID()`**：浏览器内置 API，生成 UUID v4，不需要安装 `uuid` 包。
+
+### 实现说明
+
+T2 的所有代码已在 T1 脚手架阶段一并写入 `src/shared/storage.ts`，无需额外修改。
+
+**数据读写模式**：WXT 不提供响应式 storage 封装，所有操作是"读取 → 修改 → 写回"的完整替换：
+
+```ts
+// 典型的"先读后写"模式
+async function incrementUsage(id: string) {
+  const bookmarks = await getBookmarks();          // 读全量
+  await saveBookmarks(                             // 写全量
+    bookmarks.map(b => b.id === id
+      ? { ...b, usageCount: b.usageCount + 1 }
+      : b
+    )
+  );
+}
+```
+
+**import/export 的 merge 逻辑**：按 `id` 去重，已存在的条目不覆盖：
+```ts
+const merged = [...existing, ...incoming.filter(x => !existingIds.has(x.id))];
+```
+
+### 文件
+| 文件 | 变更 |
+|------|------|
+| `src/shared/types.ts` | 已在 T1 完成，无变更 |
+| `src/shared/storage.ts` | 已在 T1 完成，无变更 |
+
+### 测试说明
+
+`storage.ts` 里的函数被打包进 bundle，无法在 console 里直接 import 调用。**T2 没有独立的手动测试方法**——它的正确性会在后续 UI task 里自然体现：T5 收藏书签、T6 点击跳转，背后调用的就是这些函数，行为正确即说明 storage 层没问题。
+
+如果想提前验证 `chrome.storage` 本身是否可用，可以在 options 页面的 DevTools Console 里直接操作原始 API：
+
+```js
+// 验证 storage 可读写（不测试我们的封装函数，只确认权限和 API 正常）
+await chrome.storage.local.set({ test: 'hello' })
+await chrome.storage.local.get('test')   // → { test: 'hello' }
+await chrome.storage.local.remove('test')
+```
+
+---
+
+## T3: Environment Rule Matching
+
+### 目标
+实现 `matchesRules(rules, url, title)` 函数，判断当前页面是否符合任意一条环境规则，决定是否显示悬浮球。
+
+### 关键概念
+- **OR 逻辑**：多条规则之间是"满足任一即可"，用 `Array.some()` 实现——遇到第一个 `true` 立即返回，短路求值。
+- **纯函数**：不依赖任何副作用，输入相同则输出相同，便于测试和复用。
+
+### 实现说明
+
+T3 已在 T1 写入 `src/shared/rules.ts`，无需修改。
+
+```ts
+export function matchesRules(rules: Rule[], url: string, title: string): boolean {
+  if (rules.length === 0) return false;          // 无规则 → 不显示
+  return rules.some(rule => {
+    if (rule.type === 'url_contains')    return url.includes(rule.value);
+    if (rule.type === 'title_contains')  return title.includes(rule.value);
+    return false;
+  });
+}
+```
+
+调用方传入：
+- `rules`：从 `getRules()` 读取的规则数组
+- `url`：`window.location.href`（完整 URL）
+- `title`：`document.title`
+
+### 文件
+| 文件 | 变更 |
+|------|------|
+| `src/shared/rules.ts` | 已在 T1 完成，无变更 |
+
+### 手动测试方法
+
+`matchesRules` 是纯函数，可以在**任意页面**的 DevTools Console 粘贴以下断言，全部输出 `true` 即为通过：
+
+```js
+function matchesRules(rules, url, title) {
+  if (rules.length === 0) return false;
+  return rules.some(r => {
+    if (r.type === 'url_contains')   return url.includes(r.value);
+    if (r.type === 'title_contains') return title.includes(r.value);
+    return false;
+  });
+}
+
+console.assert(matchesRules([{ type: 'url_contains', value: 'localhost' }], 'http://localhost:3000/home', 'App') === true)
+console.assert(matchesRules([{ type: 'title_contains', value: 'QA' }], 'http://prod.com/home', 'QA Env') === true)
+console.assert(matchesRules([{ type: 'url_contains', value: 'qacand' }], 'http://prod.com', 'Prod') === false)
+console.assert(matchesRules([], 'http://localhost:3000', 'App') === false)
+
+console.log('all passed')
+```
+
+---
