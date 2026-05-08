@@ -524,3 +524,54 @@ async function handleSaveConfirm(title: string) {
 8. 点击 Panel 外部 → Panel 关闭
 
 ---
+
+## T7: Popup — Environment Rules
+
+### 目标
+点击工具栏扩展图标弹出 popup，在其中管理环境规则（添加/编辑/删除）。
+
+### 关键概念
+- **Popup vs Options Page**：popup 是点击工具栏图标弹出的小窗口，比 options page 更轻量，适合频繁配置操作。WXT 约定：在 `src/entrypoints/popup/` 目录下创建 `index.html` + `main.tsx` 即自动注册为 popup，无需修改 `wxt.config.ts`。
+- **确定性 id**：rule 的 id 由 `SHA-1(type:value)` 的前 16 位 hex 生成，相同内容永远得到相同 id，import merge 时天然去重且 import 数据优先覆盖。
+
+### 新增文件
+- `src/entrypoints/popup/index.html`
+- `src/entrypoints/popup/main.tsx`
+- `src/entrypoints/popup/App.tsx` — 规则列表 + 添加表单，内联编辑，Enter/Escape 快捷键
+
+### 手动测试方法
+
+1. `npm run build`，重新加载扩展
+2. 点击工具栏扩展图标，打开 popup
+3. 添加规则：类型 `URL contains`，值 `localhost`，点 Add 或按 Enter → 规则出现在列表
+4. DevTools → Application → Extension storage 确认 `rules` 已持久化
+5. 点 Edit → 修改值 → Enter 保存，列表和 storage 同步更新
+6. 点 Delete → 规则从列表和 storage 移除
+7. 关闭 popup 重新打开，确认规则仍在
+
+---
+
+## T8: Popup — Import / Export
+
+### 目标
+在 popup 底部添加 Export / Import 按钮，支持数据备份和恢复。
+
+### 关键概念
+- **Export**：`exportData()` 读取全量数据 → `JSON.stringify` → `Blob` → `URL.createObjectURL` → 触发下载，下载完后 `revokeObjectURL` 释放内存。
+- **Import merge 策略**：import 数据按 id 优先覆盖已有数据（existing 中去掉 incoming 有的 id，再拼接 incoming 全量）。bookmark id = `SHA-1(path)`，rule id = `SHA-1(type:value)`，相同内容 id 相同，重复导入不会产生多余条目。
+- **`window.location.pathname`**：浏览器原生就把 query string（`?...`）和 hash（`#...`）排除在外，pathname 只包含路径部分，不需要额外处理。
+
+### 更新文件
+- `src/entrypoints/popup/App.tsx` — 追加 Export/Import 按钮，import 完成后刷新规则列表并显示状态提示
+- `src/shared/storage.ts` — `importData` 去掉 mode 参数，统一为 merge-with-override 策略；`addBookmark`/`addRule` 改用 `hashId` 生成确定性 id
+
+### 手动测试方法
+
+1. 先收藏若干书签、添加若干规则
+2. 点击 popup 里的 Export → 浏览器下载 `pathpin-data.json`，确认 JSON 包含 `bookmarks` 和 `rules`
+3. 在 Extension storage 里清空数据，重新加载扩展
+4. 点击 Import，选择刚导出的文件 → 显示 "Import successful"
+5. 确认 Extension storage 恢复，规则列表重新出现
+6. 再次导入同一文件 → 数据不重复（id 相同则覆盖，不新增）
+
+---

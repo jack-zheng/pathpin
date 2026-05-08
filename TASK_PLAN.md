@@ -164,30 +164,30 @@ Settings page for managing environment rules.
 - `src/entrypoints/options/App.tsx`
 
 **Testing:**
-1. 右键扩展图标 → "选项"，打开 options 页面
-2. 添加一条规则：类型 `URL contains`，值 `localhost`，点击保存
+1. 点击工具栏扩展图标，打开 popup
+2. 添加一条规则：类型 `URL contains`，值 `localhost`，点击 Add（或按 Enter）
 3. 确认规则出现在列表中
-4. 在 DevTools console 执行 `chrome.storage.local.get('rules', console.log)` 确认已持久化
-5. 编辑规则，修改值，确认列表和 storage 同步更新
-6. 删除规则，确认从列表和 storage 移除
-7. 关闭 options 页面重新打开，确认规则仍在（持久化验证）
+4. DevTools → Application → Extension storage，确认 `rules` 已持久化
+5. 点击 Edit 修改值，Enter 保存，确认列表和 storage 同步更新
+6. 点击 Delete，确认从列表和 storage 移除
+7. 关闭 popup 重新打开，确认规则仍在（持久化验证）
 
 ---
 
-### T8: Options Page — Import / Export
-Add import/export section to options page.
+### T8: Popup — Import / Export
+Add import/export section to popup page.
 
 **Export:** serialize `{bookmarks, rules}` → download as `pathpin-data.json`
-**Import:** file picker → parse JSON → show overwrite/merge choice → call `importData()`
+**Import:** file picker → parse JSON → confirm 弹窗选 Overwrite / Merge → call `importData()`
 
 **Testing:**
-1. 先在 storage 中存入若干书签和规则
-2. 点击"导出"按钮，确认浏览器下载 `pathpin-data.json`
-3. 打开下载的文件，确认 JSON 结构正确包含 `bookmarks` 和 `rules` 字段
-4. 清空 storage：`chrome.storage.local.clear()`，刷新 options 页面
-5. 点击"导入"，选择刚导出的 JSON 文件，选择"覆盖"模式
-6. 确认书签和规则恢复，与导出前一致
-7. 再次导入，选择"合并"模式，确认不重复添加已有数据（按 id 去重）
+1. 先通过 T5 收藏若干书签，通过 T7 添加若干规则
+2. 点击 popup 里的 Export 按钮，确认浏览器下载 `pathpin-data.json`
+3. 打开下载的文件，确认 JSON 包含 `bookmarks` 和 `rules` 两个字段
+4. 在 Extension storage 里手动清空数据（或 options 页 console 执行 `chrome.storage.local.clear()`），重新加载扩展
+5. 点击 Import，选择刚导出的文件，弹窗选 OK（Overwrite）
+6. 确认 Extension storage 里数据恢复，规则列表重新出现
+7. 再次导入同一文件，弹窗选 Cancel（Merge），确认数据不重复（按 id 去重）
 
 ---
 

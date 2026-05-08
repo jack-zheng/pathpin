@@ -1,7 +1,8 @@
 import { Bookmark, Rule, StorageData } from './types';
 
-function generateId(): string {
-  return crypto.randomUUID();
+async function hashId(input: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(input));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
 }
 
 export async function getBookmarks(): Promise<Bookmark[]> {
@@ -25,7 +26,7 @@ export async function saveRules(rules: Rule[]): Promise<void> {
 export async function addBookmark(data: { title: string; path: string }): Promise<Bookmark> {
   const bookmarks = await getBookmarks();
   const bookmark: Bookmark = {
-    id: generateId(),
+    id: await hashId(data.path),
     title: data.title,
     path: data.path,
     usageCount: 0,
@@ -52,7 +53,7 @@ export async function incrementUsage(id: string): Promise<void> {
 
 export async function addRule(data: { type: Rule['type']; value: string }): Promise<Rule> {
   const rules = await getRules();
-  const rule: Rule = { id: generateId(), type: data.type, value: data.value };
+  const rule: Rule = { id: await hashId(`${data.type}:${data.value}`), type: data.type, value: data.value };
   await saveRules([...rules, rule]);
   return rule;
 }
@@ -72,15 +73,11 @@ export async function exportData(): Promise<StorageData> {
   return { bookmarks, rules };
 }
 
-export async function importData(json: StorageData, mode: 'overwrite' | 'merge'): Promise<void> {
-  if (mode === 'overwrite') {
-    await chrome.storage.local.set({ bookmarks: json.bookmarks, rules: json.rules });
-  } else {
-    const [existingBookmarks, existingRules] = await Promise.all([getBookmarks(), getRules()]);
-    const existingBookmarkIds = new Set(existingBookmarks.map(b => b.id));
-    const existingRuleIds = new Set(existingRules.map(r => r.id));
-    const mergedBookmarks = [...existingBookmarks, ...json.bookmarks.filter(b => !existingBookmarkIds.has(b.id))];
-    const mergedRules = [...existingRules, ...json.rules.filter(r => !existingRuleIds.has(r.id))];
-    await chrome.storage.local.set({ bookmarks: mergedBookmarks, rules: mergedRules });
-  }
+export async function importData(json: StorageData): Promise<void> {
+  const [existingBookmarks, existingRules] = await Promise.all([getBookmarks(), getRules()]);
+  const incomingBookmarkIds = new Set(json.bookmarks.map(b => b.id));
+  const incomingRuleIds = new Set(json.rules.map(r => r.id));
+  const mergedBookmarks = [...existingBookmarks.filter(b => !incomingBookmarkIds.has(b.id)), ...json.bookmarks];
+  const mergedRules = [...existingRules.filter(r => !incomingRuleIds.has(r.id)), ...json.rules];
+  await chrome.storage.local.set({ bookmarks: mergedBookmarks, rules: mergedRules });
 }
