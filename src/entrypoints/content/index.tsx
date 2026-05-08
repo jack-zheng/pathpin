@@ -43,8 +43,27 @@ function App() {
       setVisible(matched);
       setIsStarred(!!existing);
       setSavedId(existing?.id ?? null);
+      setShowPopup(false);
+      setShowPanel(false);
     }
+
     check();
+
+    window.addEventListener('popstate', check);
+    window.addEventListener('hashchange', check);
+
+    // Patch history.pushState / replaceState for SPA navigation
+    const originalPush = history.pushState.bind(history);
+    const originalReplace = history.replaceState.bind(history);
+    history.pushState = (...args) => { originalPush(...args); check(); };
+    history.replaceState = (...args) => { originalReplace(...args); check(); };
+
+    return () => {
+      window.removeEventListener('popstate', check);
+      window.removeEventListener('hashchange', check);
+      history.pushState = originalPush;
+      history.replaceState = originalReplace;
+    };
   }, []);
 
   async function handleStarClick() {

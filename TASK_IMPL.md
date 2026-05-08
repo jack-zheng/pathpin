@@ -575,3 +575,52 @@ async function handleSaveConfirm(title: string) {
 6. 再次导入同一文件 → 数据不重复（id 相同则覆盖，不新增）
 
 ---
+
+## T9: SPA Navigation Awareness
+
+### 目标
+SPA 切换路由时（URL 变化但页面不刷新），重新检查规则匹配和星星状态。
+
+### 关键概念
+SPA 导航有三种方式，需要全部覆盖：
+
+| 方式 | 触发场景 |
+|---|---|
+| `popstate` 事件 | 浏览器前进/后退按钮 |
+| `hashchange` 事件 | Hash 路由（`#/page`） |
+| `history.pushState` / `replaceState` patch | React Router、Vue Router 等现代框架的编程式导航 |
+
+`pushState`/`replaceState` 不会触发任何原生事件，只能通过 monkey-patch 拦截。
+
+### 实现
+
+在 `useEffect` 里注册所有监听，`check()` 同时重置 `showPopup` 和 `showPanel`（避免导航后残留打开的弹窗）。cleanup 函数里还原 `pushState`/`replaceState`：
+
+```ts
+history.pushState = (...args) => { originalPush(...args); check(); };
+history.replaceState = (...args) => { originalReplace(...args); check(); };
+
+return () => {
+  window.removeEventListener('popstate', check);
+  window.removeEventListener('hashchange', check);
+  history.pushState = originalPush;
+  history.replaceState = originalReplace;
+};
+```
+
+### 文件
+| 文件 | 变更 |
+|------|------|
+| `src/entrypoints/content/index.tsx` | useEffect 添加三种导航事件监听 |
+
+### 手动测试方法
+
+需要一个本地 SPA 项目（React/Vue 等）：
+
+1. 配置规则匹配该 SPA 的 URL
+2. 在某路由（如 `/dashboard`）收藏该 path，星星显示实心 ★
+3. 通过 SPA 导航切换到另一路由（如 `/settings`，未收藏）→ 星星变空心 ☆
+4. 切换到不匹配规则的路由 → 悬浮球隐藏
+5. 浏览器前进/后退 → 星星状态随 URL 正确更新
+
+---
