@@ -624,3 +624,28 @@ return () => {
 5. 浏览器前进/后退 → 星星状态随 URL 正确更新
 
 ---
+
+## T10: Polish & QA
+
+### 完成的改动
+
+**悬浮球放大 1.5 倍**：font-size、padding、border-radius 等按比例调整。
+
+**悬浮球可拖动，位置跨页面持久化**：
+- 拖拽检测：`pointerdown/move/up` 事件 + `setPointerCapture` 确保拖拽过程中鼠标移出元素也能继续跟踪
+- 点击 vs 拖拽区分：移动距离超过 3px 才算拖拽，否则视为点击，避免误触发按钮
+- 拖拽目标：只响应容器空白区域，按钮区域不触发（`if closest('button') return`）
+- 位置坐标用 `right` + `bottom`，边界限制用 `Math.max/min` 防止拖出视口
+- 上下方向：`bottom` 从底部算，鼠标向下 `dy` 为正，`bottom` 需减小（`startPos.bottom - dy`）
+- 持久化：拖拽结束后存入 `chrome.storage.local`（key: `pathpin_widget_position`），页面加载时读取
+
+### 手动测试
+
+1. 拖拽悬浮球空白区域 → 跟随鼠标移动，方向正确
+2. 松手 → 位置固定
+3. 刷新页面 → 位置恢复
+4. 切换到另一个匹配规则的页面 → 同一位置
+5. 点击星星/书签图标 → 正常触发，不误判为拖拽
+6. 拖到边缘 → 不超出视口
+
+---
