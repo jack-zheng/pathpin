@@ -1,8 +1,9 @@
 import ReactDOM from 'react-dom/client';
 import { useState, useEffect } from 'react';
-import { getRules, getBookmarks } from '../../shared/storage';
+import { getRules, getBookmarks, addBookmark, deleteBookmark } from '../../shared/storage';
 import { matchesRules } from '../../shared/rules';
 import Widget from './Widget';
+import SavePopup from './SavePopup';
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -29,25 +30,54 @@ export default defineContentScript({
 function App() {
   const [visible, setVisible] = useState(false);
   const [isStarred, setIsStarred] = useState(false);
+  const [savedId, setSavedId] = useState<string | null>(null);
+  const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
     async function check() {
       const [rules, bookmarks] = await Promise.all([getRules(), getBookmarks()]);
       const matched = matchesRules(rules, window.location.href, document.title);
-      const starred = bookmarks.some(b => b.path === window.location.pathname);
+      const existing = bookmarks.find(b => b.path === window.location.pathname);
       setVisible(matched);
-      setIsStarred(starred);
+      setIsStarred(!!existing);
+      setSavedId(existing?.id ?? null);
     }
     check();
   }, []);
 
+  async function handleStarClick() {
+    if (isStarred && savedId) {
+      await deleteBookmark(savedId);
+      setIsStarred(false);
+      setSavedId(null);
+    } else {
+      setShowPopup(true);
+    }
+  }
+
+  async function handleSaveConfirm(title: string) {
+    const bookmark = await addBookmark({ title, path: window.location.pathname });
+    setIsStarred(true);
+    setSavedId(bookmark.id);
+    setShowPopup(false);
+  }
+
   if (!visible) return null;
 
   return (
-    <Widget
-      isStarred={isStarred}
-      onStarClick={() => {/* T5 */}}
-      onBookmarkClick={() => {/* T6 */}}
-    />
+    <>
+      {showPopup && (
+        <SavePopup
+          defaultTitle={document.title}
+          onConfirm={handleSaveConfirm}
+          onCancel={() => setShowPopup(false)}
+        />
+      )}
+      <Widget
+        isStarred={isStarred}
+        onStarClick={handleStarClick}
+        onBookmarkClick={() => {/* T6 */}}
+      />
+    </>
   );
 }

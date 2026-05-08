@@ -39,3 +39,66 @@
 .pathpin-star.starred {
   color: #f59e0b;
 }
+
+/* Save popup */
+.pathpin-popup {
+  position: fixed;
+  bottom: 64px;
+  right: 24px;
+  z-index: 2147483647;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 220px;
+}
+
+.pathpin-popup-input {
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 13px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pathpin-popup-input:focus {
+  border-color: #6366f1;
+}
+
+.pathpin-popup-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.pathpin-popup-btn {
+  border: none;
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.pathpin-popup-btn.confirm {
+  background: #6366f1;
+  color: #fff;
+}
+
+.pathpin-popup-btn.confirm:hover {
+  background: #4f46e5;
+}
+
+.pathpin-popup-btn.cancel {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.pathpin-popup-btn.cancel:hover {
+  background: #e5e7eb;
+}

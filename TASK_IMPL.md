@@ -430,3 +430,58 @@ await chrome.storage.local.set({
 5. DevTools → Elements 面板，找到 `<pathpin-widget>` 标签，展开确认 Shadow Root 结构正常
 
 ---
+
+## T5: Save Bookmark Flow
+
+### 目标
+点击星星图标收藏/取消收藏当前页面的 path，带 title 输入弹窗。
+
+### 关键概念
+- **`window.location.pathname`**：只取 URL 的 path 部分（如 `/dashboard`），去掉 domain，这是 PathPin 的核心——跨环境复用同一条书签。
+- **受控输入框**：`SavePopup` 用 `useState` 管理 title，`useRef` + `useEffect` 实现弹出时自动聚焦并全选文字，方便用户直接修改。
+- **Toggle 逻辑**：星星的点击行为取决于当前状态——空心时弹出输入框走新增流程，实心时直接删除，用 `savedId` state 记住当前书签的 id 以便删除。
+
+### 新增文件
+
+**`SavePopup.tsx`**：title 输入弹窗组件，接收 `defaultTitle`（预填为 `document.title`）、`onConfirm`、`onCancel`。支持 Enter 确认、Escape 取消。
+
+### 更新文件
+
+**`index.tsx`** 新增三个 state：
+- `savedId`：已收藏时记录书签 id，删除时使用
+- `showPopup`：控制弹窗显示
+
+**`widget.css`** 追加弹窗样式，定位在悬浮球上方 `bottom: 64px`。
+
+### 核心逻辑
+
+```ts
+async function handleStarClick() {
+  if (isStarred && savedId) {
+    await deleteBookmark(savedId);   // 已收藏 → 直接删除
+    setIsStarred(false);
+    setSavedId(null);
+  } else {
+    setShowPopup(true);              // 未收藏 → 打开输入框
+  }
+}
+
+async function handleSaveConfirm(title: string) {
+  const bookmark = await addBookmark({ title, path: window.location.pathname });
+  setIsStarred(true);
+  setSavedId(bookmark.id);
+  setShowPopup(false);
+}
+```
+
+### 手动测试方法
+
+1. `npm run build`，重新加载扩展
+2. 打开匹配规则的页面（如 `localhost:xxxx`），看到悬浮球
+3. 点击 ☆ → 弹出输入框，默认填入页面 title
+4. 修改 title，点击 Save（或按 Enter）→ 弹框关闭，星星变 ★
+5. DevTools → Application → Extension storage → 确认 `bookmarks` 里有新条目，`path` 为当前 pathname
+6. 再点击 ★ → 直接删除，变回 ☆
+7. 确认 Extension storage 里该条目已消失
+
+---
