@@ -327,3 +327,106 @@ console.log('all passed')
 ```
 
 ---
+
+## T4: Floating Widget UI
+
+### 目标
+在匹配环境规则的页面右下角注入悬浮球，包含星星图标（收藏状态）和书签图标（打开列表）。
+
+### 关键概念
+- **Shadow DOM**：`createShadowRootUi` 把 React 组件挂载在一个独立的 Shadow Root 里，与宿主页面的 CSS 完全隔离，避免样式冲突。WXT 提供这个 API 作为 `defineContentScript` 的配套工具。
+- **`cssInjectionMode: 'ui'`**：告诉 WXT 把 CSS 注入到 Shadow DOM 内部，而不是页面的 `<head>`，配合 Shadow DOM 隔离使用。
+- **`z-index: 2147483647`**：CSS z-index 的最大值，确保悬浮球不会被页面其他元素遮挡。
+- **React 组件文件名大写**：JSX 里 `<Widget />` 才会被识别为 React 组件，`<widget />` 会被当作原生 HTML 标签，所以组件文件名按惯例大写。
+
+### 实现步骤
+
+#### 1. 创建 Widget.tsx — 悬浮球组件
+
+接收三个 props：
+- `isStarred`：当前 path 是否已收藏，控制星星空心/实心
+- `onStarClick`：点击星星的回调（T5 实现）
+- `onBookmarkClick`：点击书签图标的回调（T6 实现）
+
+```tsx
+interface WidgetProps {
+  onStarClick: () => void;
+  onBookmarkClick: () => void;
+  isStarred: boolean;
+}
+
+export default function Widget({ onStarClick, onBookmarkClick, isStarred }: WidgetProps) {
+  return (
+    <div className="pathpin-widget">
+      <button className={`pathpin-btn pathpin-star ${isStarred ? 'starred' : ''}`} onClick={onStarClick}>
+        {isStarred ? '★' : '☆'}
+      </button>
+      <button className="pathpin-btn pathpin-bookmark" onClick={onBookmarkClick}>
+        🔖
+      </button>
+    </div>
+  );
+}
+```
+
+#### 2. 创建 widget.css — 悬浮球样式
+
+固定右下角，圆角卡片，Shadow DOM 内的样式不会泄漏到宿主页面：
+
+```css
+.pathpin-widget {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 20px;
+  padding: 4px 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+```
+
+#### 3. 更新 index.tsx — 接入规则匹配和星星状态
+
+页面加载时并行读取规则和书签，判断：
+1. 当前页面是否匹配环境规则 → 控制悬浮球显示/隐藏
+2. 当前 `pathname` 是否已收藏 → 控制星星状态
+
+```tsx
+useEffect(() => {
+  async function check() {
+    const [rules, bookmarks] = await Promise.all([getRules(), getBookmarks()]);
+    const matched = matchesRules(rules, window.location.href, document.title);
+    const starred = bookmarks.some(b => b.path === window.location.pathname);
+    setVisible(matched);
+    setIsStarred(starred);
+  }
+  check();
+}, []);
+```
+
+### 文件
+| 文件 | 变更 |
+|------|------|
+| `src/entrypoints/content/index.tsx` | 接入规则匹配 + 星星状态检查 |
+| `src/entrypoints/content/Widget.tsx` | 新建，悬浮球组件 |
+| `src/entrypoints/content/widget.css` | 新建，悬浮球样式 |
+
+### 手动测试方法
+
+1. `npm run build`，在 `chrome://extensions` 重新加载扩展
+2. 在 options 页面 console 写入一条测试规则：
+```js
+await chrome.storage.local.set({
+  rules: [{ id: crypto.randomUUID(), type: 'url_contains', value: 'localhost' }]
+})
+```
+3. 打开任意 `http://localhost:xxxx` 页面，右下角应出现悬浮球（☆ + 🔖）
+4. 打开 `https://google.com`，悬浮球不显示
+5. DevTools → Elements 面板，找到 `<pathpin-widget>` 标签，展开确认 Shadow Root 结构正常
+
+---
