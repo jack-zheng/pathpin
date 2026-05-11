@@ -1,5 +1,5 @@
 import ReactDOM from 'react-dom/client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getRules, getBookmarks, addBookmark, deleteBookmark } from '../../shared/storage';
 import { matchesRules } from '../../shared/rules';
 import Widget from './Widget';
@@ -38,6 +38,7 @@ function App() {
   const [showPopup, setShowPopup] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
   const [widgetPos, setWidgetPos] = useState(DEFAULT_POS);
+  const panelJustClosed = useRef(false);
 
   useEffect(() => {
     chrome.storage.local.get(STORAGE_KEY).then(r => {
@@ -86,13 +87,13 @@ function App() {
           onCancel={() => setShowPopup(false)}
         />
       )}
-      {showPanel && <Panel widgetPos={widgetPos} onClose={() => setShowPanel(false)} onDeleteBookmark={id => { if (id === savedId) { setIsStarred(false); setSavedId(null); } }} />}
+      {showPanel && <Panel widgetPos={widgetPos} onClose={() => { setShowPanel(false); panelJustClosed.current = true; }} onDeleteBookmark={id => { if (id === savedId) { setIsStarred(false); setSavedId(null); } }} />}
       <Widget
         isStarred={isStarred}
         pos={widgetPos}
         setPos={setWidgetPos}
         onStarClick={handleStarClick}
-        onBookmarkClick={() => setShowPanel(prev => !prev)}
+        onBookmarkClick={() => { if (panelJustClosed.current) { panelJustClosed.current = false; return; } setShowPanel(true); }}
       />
     </>
   );
