@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import './widget.css';
 import starMarkedUrl from '../../assets/star_marked.svg?url';
 import starUnmarkedUrl from '../../assets/star_unmarked.svg?url';
@@ -8,25 +8,18 @@ interface WidgetProps {
   onStarClick: () => void;
   onBookmarkClick: () => void;
   isStarred: boolean;
+  pos: { bottom: number; right: number };
+  setPos: (pos: { bottom: number; right: number }) => void;
 }
 
 const STORAGE_KEY = 'pathpin_widget_position';
-const DEFAULT_POS = { bottom: 24, right: 24 };
 
-export default function Widget({ onStarClick, onBookmarkClick, isStarred }: WidgetProps) {
-  const [pos, setPos] = useState(DEFAULT_POS);
+export default function Widget({ onStarClick, onBookmarkClick, isStarred, pos, setPos }: WidgetProps) {
   const dragging = useRef(false);
   const moved = useRef(false);
   const startPointer = useRef({ x: 0, y: 0 });
-  const startPos = useRef(DEFAULT_POS);
+  const startPos = useRef(pos);
   const ref = useRef<HTMLDivElement>(null);
-
-  // Load saved position
-  useEffect(() => {
-    chrome.storage.local.get(STORAGE_KEY).then(r => {
-      if (r[STORAGE_KEY]) setPos(r[STORAGE_KEY]);
-    });
-  }, []);
 
   function onPointerDown(e: React.PointerEvent) {
     if ((e.target as HTMLElement).closest('button')) return;
@@ -54,6 +47,7 @@ export default function Widget({ onStarClick, onBookmarkClick, isStarred }: Widg
     if (moved.current) {
       chrome.storage.local.set({ [STORAGE_KEY]: pos });
     }
+    setTimeout(() => { moved.current = false; }, 0);
     e.preventDefault();
   }
 

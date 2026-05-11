@@ -6,6 +6,9 @@ import Widget from './Widget';
 import SavePopup from './SavePopup';
 import Panel from './Panel';
 
+const STORAGE_KEY = 'pathpin_widget_position';
+const DEFAULT_POS = { bottom: 24, right: 24 };
+
 export default defineContentScript({
   matches: ['<all_urls>'],
   cssInjectionMode: 'ui',
@@ -34,6 +37,13 @@ function App() {
   const [savedId, setSavedId] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
+  const [widgetPos, setWidgetPos] = useState(DEFAULT_POS);
+
+  useEffect(() => {
+    chrome.storage.local.get(STORAGE_KEY).then(r => {
+      if (r[STORAGE_KEY]) setWidgetPos(r[STORAGE_KEY]);
+    });
+  }, []);
 
   useEffect(() => {
     async function check() {
@@ -71,13 +81,16 @@ function App() {
       {showPopup && (
         <SavePopup
           defaultTitle={document.title}
+          widgetPos={widgetPos}
           onConfirm={handleSaveConfirm}
           onCancel={() => setShowPopup(false)}
         />
       )}
-      {showPanel && <Panel onClose={() => setShowPanel(false)} onDeleteBookmark={id => { if (id === savedId) { setIsStarred(false); setSavedId(null); } }} />}
+      {showPanel && <Panel widgetPos={widgetPos} onClose={() => setShowPanel(false)} onDeleteBookmark={id => { if (id === savedId) { setIsStarred(false); setSavedId(null); } }} />}
       <Widget
         isStarred={isStarred}
+        pos={widgetPos}
+        setPos={setWidgetPos}
         onStarClick={handleStarClick}
         onBookmarkClick={() => setShowPanel(prev => !prev)}
       />

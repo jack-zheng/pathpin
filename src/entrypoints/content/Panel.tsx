@@ -1,13 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getBookmarks, deleteBookmark, updateBookmark, incrementUsage } from '../../shared/storage';
 import type { Bookmark } from '../../shared/types';
 
 interface PanelProps {
   onClose: () => void;
   onDeleteBookmark?: (id: string) => void;
+  widgetPos: { bottom: number; right: number };
 }
 
-export default function Panel({ onClose, onDeleteBookmark }: PanelProps) {
+export default function Panel({ onClose, onDeleteBookmark, widgetPos }: PanelProps) {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [query, setQuery] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -63,8 +64,17 @@ export default function Panel({ onClose, onDeleteBookmark }: PanelProps) {
     setEditingId(null);
   }
 
+  const WIDGET_HEIGHT = 48;
+  const POPUP_MARGIN = 8;
+  const PANEL_HEIGHT = 340;
+  const spaceAbove = window.innerHeight - widgetPos.bottom - WIDGET_HEIGHT;
+  const openUpward = spaceAbove >= PANEL_HEIGHT;
+  const posStyle: React.CSSProperties = openUpward
+    ? { bottom: widgetPos.bottom + WIDGET_HEIGHT + POPUP_MARGIN, right: widgetPos.right }
+    : { top: window.innerHeight - widgetPos.bottom + POPUP_MARGIN, right: widgetPos.right };
+
   return (
-    <div className="pathpin-panel" ref={panelRef}>
+    <div className="pathpin-panel" ref={panelRef} style={posStyle}>
       <input
         className="pathpin-panel-search"
         placeholder="Search bookmarks..."

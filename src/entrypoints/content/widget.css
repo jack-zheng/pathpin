@@ -54,8 +54,6 @@
 /* Save popup */
 .pathpin-popup {
   position: fixed;
-  bottom: 64px;
-  right: 24px;
   z-index: 2147483647;
   background: #fff;
   border: 1px solid #d1d5db;
@@ -117,8 +115,6 @@
 /* Bookmark panel */
 .pathpin-panel {
   position: fixed;
-  bottom: 64px;
-  right: 24px;
   z-index: 2147483647;
   background: #fff;
   border: 1px solid #d1d5db;

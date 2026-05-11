@@ -2,11 +2,12 @@ import { useState, useRef, useEffect } from 'react';
 
 interface SavePopupProps {
   defaultTitle: string;
+  widgetPos: { bottom: number; right: number };
   onConfirm: (title: string) => void;
   onCancel: () => void;
 }
 
-export default function SavePopup({ defaultTitle, onConfirm, onCancel }: SavePopupProps) {
+export default function SavePopup({ defaultTitle, widgetPos, onConfirm, onCancel }: SavePopupProps) {
   const [title, setTitle] = useState(defaultTitle);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -20,8 +21,17 @@ export default function SavePopup({ defaultTitle, onConfirm, onCancel }: SavePop
     if (e.key === 'Escape') onCancel();
   }
 
+  const WIDGET_HEIGHT = 48;
+  const POPUP_MARGIN = 8;
+  const POPUP_HEIGHT = 90;
+  const spaceAbove = window.innerHeight - widgetPos.bottom - WIDGET_HEIGHT;
+  const openUpward = spaceAbove >= POPUP_HEIGHT;
+  const posStyle: React.CSSProperties = openUpward
+    ? { bottom: widgetPos.bottom + WIDGET_HEIGHT + POPUP_MARGIN, right: widgetPos.right }
+    : { top: window.innerHeight - widgetPos.bottom + POPUP_MARGIN, right: widgetPos.right };
+
   return (
-    <div className="pathpin-popup">
+    <div className="pathpin-popup" style={posStyle}>
       <input
         ref={inputRef}
         className="pathpin-popup-input"
