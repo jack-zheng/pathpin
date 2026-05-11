@@ -13,6 +13,7 @@ export default function Panel({ onClose, onDeleteBookmark, widgetPos }: PanelPro
   const [query, setQuery] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -22,12 +23,11 @@ export default function Panel({ onClose, onDeleteBookmark, widgetPos }: PanelPro
   // Close on outside click or Escape
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      const shadowRoot = panelRef.current?.getRootNode() as ShadowRoot | null;
-      const target = e.composedPath()[0] as Node;
-      if (panelRef.current && !panelRef.current.contains(target)) {
+      const rect = panelRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
         onClose();
       }
-      void shadowRoot;
     }
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') {
@@ -38,9 +38,12 @@ export default function Panel({ onClose, onDeleteBookmark, widgetPos }: PanelPro
         }
       }
     }
+    const shadowRoot = panelRef.current?.getRootNode() as ShadowRoot | Document;
+    shadowRoot.addEventListener('mousedown', handleClick as EventListener);
     document.addEventListener('mousedown', handleClick);
     document.addEventListener('keydown', handleKeyDown);
     return () => {
+      shadowRoot.removeEventListener('mousedown', handleClick as EventListener);
       document.removeEventListener('mousedown', handleClick);
       document.removeEventListener('keydown', handleKeyDown);
     };
@@ -52,8 +55,20 @@ export default function Panel({ onClose, onDeleteBookmark, widgetPos }: PanelPro
       if (!q) return true;
       return b.title.toLowerCase().includes(q) || b.path.toLowerCase().includes(q);
     })
-    .sort((a, b) => b.usageCount - a.usageCount)
-    .slice(0, query ? undefined : 5);
+    .sort((a, b) => b.usageCount - a.usageCount);
+
+  function handleSearchKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex(i => Math.min(i + 1, filtered.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex(i => Math.max(i - 1, 0));
+    } else if (e.key === 'Enter' && filtered[selectedIndex]) {
+      e.preventDefault();
+      handleNavigate(filtered[selectedIndex]);
+    }
+  }
 
   async function handleNavigate(bookmark: Bookmark) {
     await incrementUsage(bookmark.id);
@@ -79,7 +94,7 @@ export default function Panel({ onClose, onDeleteBookmark, widgetPos }: PanelPro
 
   const WIDGET_HEIGHT = 48;
   const POPUP_MARGIN = 8;
-  const PANEL_HEIGHT = 340;
+  const PANEL_HEIGHT = 400;
   const spaceAbove = window.innerHeight - widgetPos.bottom - WIDGET_HEIGHT;
   const openUpward = spaceAbove >= PANEL_HEIGHT;
   const posStyle: React.CSSProperties = openUpward
@@ -88,19 +103,23 @@ export default function Panel({ onClose, onDeleteBookmark, widgetPos }: PanelPro
 
   return (
     <div className="pathpin-panel" ref={panelRef} style={posStyle}>
-      <input
-        className="pathpin-panel-search"
-        placeholder="Search bookmarks..."
-        value={query}
-        onChange={e => setQuery(e.target.value)}
-        autoFocus
-      />
+      <div className="pathpin-panel-header">
+        <input
+          className="pathpin-panel-search"
+          placeholder="Search bookmarks..."
+          value={query}
+          onChange={e => { setQuery(e.target.value); setSelectedIndex(0); }}
+          onKeyDown={handleSearchKeyDown}
+          autoFocus
+        />
+        <span className="pathpin-panel-count">{filtered.length}</span>
+      </div>
       {filtered.length === 0 ? (
         <div className="pathpin-panel-empty">No bookmarks yet</div>
       ) : (
         <ul className="pathpin-panel-list">
-          {filtered.map(bookmark => (
-            <li key={bookmark.id} className="pathpin-panel-item">
+          {filtered.map((bookmark, idx) => (
+            <li key={bookmark.id} className={`pathpin-panel-item${idx === selectedIndex ? ' selected' : ''}`}>
               {editingId === bookmark.id ? (
                 <input
                   className="pathpin-panel-edit-input"

@@ -23,14 +23,18 @@ export default function SavePopup({ defaultTitle, widgetPos, onConfirm, onCancel
       if (e.key === 'Enter') onConfirm(title);
     }
     function handleClick(e: MouseEvent) {
-      const target = e.composedPath()[0] as Node;
-      if (popupRef.current && !popupRef.current.contains(target)) onCancel();
+      const rect = popupRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) onCancel();
     }
+    const shadowRoot = popupRef.current?.getRootNode() as ShadowRoot | Document;
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('mousedown', handleClick);
+    shadowRoot.addEventListener('mousedown', handleClick as EventListener);
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('mousedown', handleClick);
+      shadowRoot.removeEventListener('mousedown', handleClick as EventListener);
     };
   }, [title, onConfirm, onCancel]);
 
