@@ -3,11 +3,11 @@
   z-index: 2147483647;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   background: #fff;
   border: 1px solid #d1d5db;
-  border-radius: 30px;
-  padding: 6px 12px;
+  border-radius: 36px;
+  padding: 8px 14px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   user-select: none;
 }
@@ -16,7 +16,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  padding: 6px;
+  padding: 7px;
   border-radius: 50%;
   font-size: 24px;
   line-height: 1;
@@ -38,13 +38,13 @@
 }
 
 .pathpin-star {
-  width: 24px;
-  height: 24px;
+  width: 34px;
+  height: 34px;
 }
 
 .pathpin-bookmark {
-  width: 24px;
-  height: 24px;
+  width: 34px;
+  height: 34px;
 }
 
 .pathpin-star.starred {

@@ -92,7 +92,7 @@ export default function Panel({ onClose, onDeleteBookmark, widgetPos }: PanelPro
     setEditingId(null);
   }
 
-  const WIDGET_HEIGHT = 48;
+  const WIDGET_HEIGHT = 58;
   const POPUP_MARGIN = 8;
   const PANEL_HEIGHT = 400;
   const spaceAbove = window.innerHeight - widgetPos.bottom - WIDGET_HEIGHT;

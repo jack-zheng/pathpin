@@ -38,7 +38,7 @@ export default function SavePopup({ defaultTitle, widgetPos, onConfirm, onCancel
     };
   }, [title, onConfirm, onCancel]);
 
-  const WIDGET_HEIGHT = 48;
+  const WIDGET_HEIGHT = 58;
   const POPUP_MARGIN = 8;
   const POPUP_HEIGHT = 90;
   const spaceAbove = window.innerHeight - widgetPos.bottom - WIDGET_HEIGHT;
