@@ -10,16 +10,29 @@ interface SavePopupProps {
 export default function SavePopup({ defaultTitle, widgetPos, onConfirm, onCancel }: SavePopupProps) {
   const [title, setTitle] = useState(defaultTitle);
   const inputRef = useRef<HTMLInputElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     inputRef.current?.focus();
     inputRef.current?.select();
   }, []);
 
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'Enter') onConfirm(title);
-    if (e.key === 'Escape') onCancel();
-  }
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onCancel();
+      if (e.key === 'Enter') onConfirm(title);
+    }
+    function handleClick(e: MouseEvent) {
+      const target = e.composedPath()[0] as Node;
+      if (popupRef.current && !popupRef.current.contains(target)) onCancel();
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handleClick);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleClick);
+    };
+  }, [title, onConfirm, onCancel]);
 
   const WIDGET_HEIGHT = 48;
   const POPUP_MARGIN = 8;
@@ -31,13 +44,12 @@ export default function SavePopup({ defaultTitle, widgetPos, onConfirm, onCancel
     : { top: window.innerHeight - widgetPos.bottom + POPUP_MARGIN, right: widgetPos.right };
 
   return (
-    <div className="pathpin-popup" style={posStyle}>
+    <div className="pathpin-popup" ref={popupRef} style={posStyle}>
       <input
         ref={inputRef}
         className="pathpin-popup-input"
         value={title}
         onChange={e => setTitle(e.target.value)}
-        onKeyDown={handleKeyDown}
         placeholder="Bookmark title"
       />
       <div className="pathpin-popup-actions">

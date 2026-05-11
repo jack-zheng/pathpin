@@ -19,7 +19,7 @@ export default function Panel({ onClose, onDeleteBookmark, widgetPos }: PanelPro
     getBookmarks().then(setBookmarks);
   }, []);
 
-  // Close on outside click — must listen on shadow root's ownerDocument
+  // Close on outside click or Escape
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       const shadowRoot = panelRef.current?.getRootNode() as ShadowRoot | null;
@@ -29,9 +29,22 @@ export default function Panel({ onClose, onDeleteBookmark, widgetPos }: PanelPro
       }
       void shadowRoot;
     }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        if (editingId) {
+          setEditingId(null);
+        } else {
+          onClose();
+        }
+      }
+    }
     document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [onClose]);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onClose, editingId]);
 
   const filtered = bookmarks
     .filter(b => {
@@ -93,7 +106,7 @@ export default function Panel({ onClose, onDeleteBookmark, widgetPos }: PanelPro
                   className="pathpin-panel-edit-input"
                   value={editingTitle}
                   onChange={e => setEditingTitle(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') confirmEdit(bookmark.id); if (e.key === 'Escape') setEditingId(null); }}
+                  onKeyDown={e => { if (e.key === 'Enter') confirmEdit(bookmark.id); }}
                   autoFocus
                 />
               ) : (
