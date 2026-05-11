@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import './widget.css';
+import starMarkedUrl from '../../assets/star_marked.svg?url';
+import starUnmarkedUrl from '../../assets/star_unmarked.svg?url';
+import bookmarkUrl from '../../assets/bookmark.svg?url';
 
 interface WidgetProps {
   onStarClick: () => void;
@@ -68,14 +71,14 @@ export default function Widget({ onStarClick, onBookmarkClick, isStarred }: Widg
         onClick={e => { if (moved.current) { e.stopPropagation(); return; } onStarClick(); }}
         title={isStarred ? 'Remove bookmark' : 'Save path'}
       >
-        {isStarred ? '★' : '☆'}
+        <img src={isStarred ? starMarkedUrl : starUnmarkedUrl} alt="star" />
       </button>
       <button
         className="pathpin-btn pathpin-bookmark"
         onClick={e => { if (moved.current) { e.stopPropagation(); return; } onBookmarkClick(); }}
         title="Open bookmarks"
       >
-        🔖
+        <img src={bookmarkUrl} alt="bookmark" />
       </button>
     </div>
   );

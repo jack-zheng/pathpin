@@ -30,9 +30,21 @@
   background: #f3f4f6;
 }
 
+.pathpin-star img,
+.pathpin-bookmark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .pathpin-star {
-  font-size: 21px;
-  color: #9ca3af;
+  width: 24px;
+  height: 24px;
+}
+
+.pathpin-bookmark {
+  width: 24px;
+  height: 24px;
 }
 
 .pathpin-star.starred {
