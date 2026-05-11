@@ -71,7 +71,6 @@ export default function App() {
     <div style={s.page}>
       <h1 style={s.title}>PathPin</h1>
 
-      <h2 style={s.sectionTitle}>Environment Rules</h2>
       <p style={s.hint}>Show widget on pages matching any rule.</p>
 
       {rules.length === 0 ? (
