@@ -17,6 +17,7 @@ export default function SavePopup({ defaultTitle, widgetPos, onConfirm, onCancel
     if (!input) return;
     input.focus();
     input.setSelectionRange(input.value.length, input.value.length);
+    input.scrollLeft = 0;
   }, []);
 
   useEffect(() => {

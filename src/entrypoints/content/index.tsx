@@ -5,7 +5,7 @@ import { matchesRules } from '../../shared/rules';
 import Widget from './Widget';
 import SavePopup from './SavePopup';
 import Panel from './Panel';
-import QuickSaveModal from './QuickSaveModal';
+import QuickModal from './QuickModal';
 
 const STORAGE_KEY = 'pathpin_widget_position';
 const DEFAULT_POS = { bottom: 24, right: 24 };
@@ -39,7 +39,7 @@ function App() {
   const [showPopup, setShowPopup] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
   const [showQuickSave, setShowQuickSave] = useState(false);
-  const [widgetPos, setWidgetPos] = useState(DEFAULT_POS);
+  const [showQuickSearch, setShowQuickSearch] = useState(false);  const [widgetPos, setWidgetPos] = useState(DEFAULT_POS);
   const panelJustClosed = useRef(false);
 
   useEffect(() => {
@@ -80,13 +80,17 @@ function App() {
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.altKey && (e.key === 's' || e.key === 'ß')) {
+      if (e.altKey && e.code === 'KeyS') {
         e.preventDefault();
         if (isStarred && savedId) {
           deleteBookmark(savedId).then(() => { setIsStarred(false); setSavedId(null); });
         } else {
           setShowQuickSave(true);
         }
+      }
+      if (e.altKey && e.code === 'KeyB') {
+        e.preventDefault();
+        setShowQuickSearch(true);
       }
     }
     document.addEventListener('keydown', handleKeyDown);
@@ -98,11 +102,15 @@ function App() {
   return (
     <>
       {showQuickSave && (
-        <QuickSaveModal
+        <QuickModal
+          mode="star"
           defaultTitle={document.title}
           onConfirm={handleSaveConfirm}
-          onCancel={() => setShowQuickSave(false)}
+          onClose={() => setShowQuickSave(false)}
         />
+      )}
+      {showQuickSearch && (
+        <QuickModal mode="search" onClose={() => setShowQuickSearch(false)} />
       )}
       {showPopup && (
         <SavePopup
