@@ -255,3 +255,56 @@
   background: #fee2e2;
   color: #ef4444;
 }
+
+/* Shortcuts modal */
+.pathpin-shortcuts-modal {
+  padding: 16px;
+}
+
+.pathpin-shortcuts-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 12px;
+}
+
+.pathpin-shortcuts-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pathpin-shortcuts-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pathpin-shortcuts-keys {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+  min-width: 64px;
+}
+
+.pathpin-shortcuts-keys kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 12px;
+  font-family: inherit;
+  color: #374151;
+  line-height: 1.4;
+}
+
+.pathpin-shortcuts-desc {
+  font-size: 13px;
+  color: #6b7280;
+}

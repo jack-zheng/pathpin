@@ -1,27 +1,28 @@
 # PathPin
 
-A Chrome extension that saves URL **paths** instead of full URLs, solving the problem of duplicate bookmarks across multiple environments (dev / staging / production).
+A Chrome extension that saves URL **paths** instead of full URLs, solving the problem of duplicate bookmarks across multiple environments.
 
 ## The Problem
 
 When working across multiple environments, you end up saving the same page multiple times:
 
 - `https://dev.myapp.com/dashboard`
-- `https://staging.myapp.com/dashboard`
+- `http://localhost:8080/dashboard`
+- `https://qa.myapp.com/dashboard`
 - `https://prod.myapp.com/dashboard`
 
 ## The Solution
 
-PathPin saves only the path (`/dashboard`). When you click a bookmark, it combines the saved path with the **current domain**, so one bookmark works across all environments.
+PathPin saves only the path (e.g. `/dashboard`). When you click a bookmark, it combines the saved path with the **current domain**, so one bookmark works across all environments.
 
 ## Features
 
 - **Floating widget** — appears on pages matching your environment rules
 - **Save path** — click the star to bookmark the current path with a custom title
 - **Bookmark panel** — search, navigate, edit, and delete bookmarks
-- **Environment rules** — configure URL/title patterns to control where the widget shows
+- **Environment rules** — configure URL/domain patterns to control where the widget shows
 - **Draggable widget** — drag to reposition, position persists across pages
-- **Import / Export** — backup and share your bookmarks and rules as JSON
+- **Keyboard shortcuts** — star, search, and navigate without touching the mouse
 
 ## Installation
 
@@ -42,27 +43,16 @@ Then in Chrome:
 ## Usage
 
 1. Click the extension icon in the toolbar to open the popup
-2. Add an environment rule (e.g. `URL contains: localhost`)
+2. Add an environment rule (e.g. `Domain equals: localhost`)
 3. Visit a matching page — the floating widget appears in the bottom-right corner
-4. Click **☆** to save the current path
-5. Click **🔖** to open the bookmark panel and navigate
+4. Click ☆ to save the current path
+5. Click the bookmark icon to open the panel and navigate
 
-## Tech Stack
+## Keyboard Shortcuts
 
-- [WXT](https://wxt.dev) — Chrome extension framework
-- React + TypeScript
-- `chrome.storage.local` for persistence
-
-## Project Structure
-
-```
-src/
-├── entrypoints/
-│   ├── content/        # Floating widget injected into pages
-│   ├── popup/          # Popup for rules management and import/export
-│   └── options/        # Options page (reserved)
-└── shared/
-    ├── types.ts         # Bookmark, Rule type definitions
-    ├── storage.ts       # chrome.storage.local CRUD
-    └── rules.ts         # Environment rule matching logic
-```
+| Shortcut | Action |
+|----------|--------|
+| `⌥ S` | Star / unstar current page |
+| `⌥ B` | Search bookmarks |
+| `⌥ H` | Toggle floating widget |
+| `⌥ /` | Show all shortcuts |

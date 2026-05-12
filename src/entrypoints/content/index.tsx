@@ -7,6 +7,7 @@ import Widget from './Widget';
 import SavePopup from './SavePopup';
 import Panel from './Panel';
 import QuickModal from './QuickModal';
+import ShortcutsModal from './ShortcutsModal';
 
 const DEFAULT_POS = { bottom: 24, right: 24 };
 
@@ -40,7 +41,8 @@ function App() {
   const [showPopup, setShowPopup] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
   const [showQuickSave, setShowQuickSave] = useState(false);
-  const [showQuickSearch, setShowQuickSearch] = useState(false);  const [widgetPos, setWidgetPos] = useState(DEFAULT_POS);
+  const [showQuickSearch, setShowQuickSearch] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);  const [widgetPos, setWidgetPos] = useState(DEFAULT_POS);
   const panelJustClosed = useRef(false);
 
   useEffect(() => {
@@ -102,6 +104,10 @@ function App() {
           return next;
         });
       }
+      if (e.altKey && e.code === 'Slash') {
+        e.preventDefault();
+        setShowShortcuts(prev => !prev);
+      }
     }
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
@@ -111,6 +117,7 @@ function App() {
 
   return (
     <>
+      {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
       {showQuickSave && (
         <QuickModal
           mode="star"
