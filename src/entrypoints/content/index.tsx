@@ -1,6 +1,6 @@
 import ReactDOM from 'react-dom/client';
 import { useState, useEffect, useRef } from 'react';
-import { getRules, getBookmarks, addBookmark, deleteBookmark } from '../../shared/storage';
+import { getRules, getBookmarks, addBookmark, deleteBookmark, getWidgetEnabled } from '../../shared/storage';
 import { matchesRules } from '../../shared/rules';
 import Widget from './Widget';
 import SavePopup from './SavePopup';
@@ -34,6 +34,7 @@ export default defineContentScript({
 
 function App() {
   const [visible, setVisible] = useState(false);
+  const [widgetVisible, setWidgetVisible] = useState(false);
   const [isStarred, setIsStarred] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
@@ -50,10 +51,11 @@ function App() {
 
   useEffect(() => {
     async function check() {
-      const [rules, bookmarks] = await Promise.all([getRules(), getBookmarks()]);
+      const [rules, bookmarks, enabled] = await Promise.all([getRules(), getBookmarks(), getWidgetEnabled()]);
       const matched = matchesRules(rules, window.location.href, document.title);
       const existing = bookmarks.find(b => b.path === window.location.pathname);
       setVisible(matched);
+      setWidgetVisible(matched && enabled);
       setIsStarred(!!existing);
       setSavedId(existing?.id ?? null);
     }
@@ -121,13 +123,15 @@ function App() {
         />
       )}
       {showPanel && <Panel widgetPos={widgetPos} onClose={() => { setShowPanel(false); panelJustClosed.current = true; }} onDeleteBookmark={id => { if (id === savedId) { setIsStarred(false); setSavedId(null); } }} />}
-      <Widget
-        isStarred={isStarred}
-        pos={widgetPos}
-        setPos={setWidgetPos}
-        onStarClick={handleStarClick}
-        onBookmarkClick={() => { if (panelJustClosed.current) { panelJustClosed.current = false; return; } setShowPanel(true); }}
-      />
+      {widgetVisible && (
+        <Widget
+          isStarred={isStarred}
+          pos={widgetPos}
+          setPos={setWidgetPos}
+          onStarClick={handleStarClick}
+          onBookmarkClick={() => { if (panelJustClosed.current) { panelJustClosed.current = false; return; } setShowPanel(true); }}
+        />
+      )}
     </>
   );
 }

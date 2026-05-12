@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { getRules, addRule, updateRule, deleteRule, exportData, importData } from '../../shared/storage';
+import { getRules, addRule, updateRule, deleteRule, exportData, importData, getWidgetEnabled, setWidgetEnabled } from '../../shared/storage';
 import type { Rule, StorageData } from '../../shared/types';
 
 export default function App() {
@@ -9,10 +9,12 @@ export default function App() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState('');
   const [importStatus, setImportStatus] = useState('');
+  const [widgetEnabled, setWidgetEnabledState] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     getRules().then(setRules);
+    getWidgetEnabled().then(setWidgetEnabledState);
   }, []);
 
   async function handleAdd() {
@@ -121,6 +123,21 @@ export default function App() {
 
       <hr style={s.divider} />
 
+      <div style={s.toggleRow}>
+        <span style={s.toggleLabel}>Show widget</span>
+        <label style={s.switch}>
+          <input
+            type="checkbox"
+            checked={widgetEnabled}
+            onChange={e => { setWidgetEnabledState(e.target.checked); setWidgetEnabled(e.target.checked); }}
+            style={{ display: 'none' }}
+          />
+          <span style={{ ...s.slider, ...(widgetEnabled ? s.sliderOn : {}) }} />
+        </label>
+      </div>
+
+      <hr style={s.divider} />
+
       <div style={s.dataRow}>
         <button style={{ ...s.btn, ...s.btnPrimary }} onClick={handleExport}>Export</button>
         <button style={s.btn} onClick={() => fileInputRef.current?.click()}>Import</button>
@@ -150,6 +167,11 @@ const s: Record<string, React.CSSProperties> = {
   btnPrimary: { background: '#6366f1', color: '#fff', border: 'none' },
   btnDanger: { color: '#ef4444', borderColor: '#fca5a5' },
   divider: { border: 'none', borderTop: '1px solid #f3f4f6', margin: '16px 0' },
+  toggleRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
+  toggleLabel: { fontSize: 12, color: '#374151' },
+  switch: { position: 'relative' as const, display: 'inline-block', width: 32, height: 18, cursor: 'pointer' },
+  slider: { position: 'absolute' as const, inset: 0, background: '#d1d5db', borderRadius: 18, transition: '0.2s', display: 'block' } as React.CSSProperties,
+  sliderOn: { background: '#6366f1' } as React.CSSProperties,
   dataRow: { display: 'flex', gap: 8 },
   status: { fontSize: 11, color: '#6b7280', marginTop: 8 },
 };

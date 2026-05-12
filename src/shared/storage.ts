@@ -68,6 +68,15 @@ export async function deleteRule(id: string): Promise<void> {
   await saveRules(rules.filter(r => r.id !== id));
 }
 
+export async function getWidgetEnabled(): Promise<boolean> {
+  const result = await chrome.storage.local.get('widgetEnabled');
+  return result.widgetEnabled ?? true;
+}
+
+export async function setWidgetEnabled(enabled: boolean): Promise<void> {
+  await chrome.storage.local.set({ widgetEnabled: enabled });
+}
+
 export async function exportData(): Promise<StorageData> {
   const [bookmarks, rules] = await Promise.all([getBookmarks(), getRules()]);
   return { bookmarks, rules };
