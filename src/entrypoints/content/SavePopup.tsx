@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
+import { WIDGET_HEIGHT, POPUP_MARGIN } from '../../shared/constants';
+import { useOutsideClick } from './useOutsideClick';
 
 interface SavePopupProps {
   defaultTitle: string;
@@ -20,29 +22,17 @@ export default function SavePopup({ defaultTitle, widgetPos, onConfirm, onCancel
     input.scrollLeft = 0;
   }, []);
 
+  useOutsideClick(popupRef, onCancel);
+
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') onCancel();
       if (e.key === 'Enter') onConfirm(title);
     }
-    function handleClick(e: MouseEvent) {
-      const rect = popupRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) onCancel();
-    }
-    const shadowRoot = popupRef.current?.getRootNode() as ShadowRoot | Document;
     document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('mousedown', handleClick);
-    shadowRoot.addEventListener('mousedown', handleClick as EventListener);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('mousedown', handleClick);
-      shadowRoot.removeEventListener('mousedown', handleClick as EventListener);
-    };
+    return () => { document.removeEventListener('keydown', handleKeyDown); };
   }, [title, onConfirm, onCancel]);
 
-  const WIDGET_HEIGHT = 58;
-  const POPUP_MARGIN = 8;
   const POPUP_HEIGHT = 90;
   const spaceAbove = window.innerHeight - widgetPos.bottom - WIDGET_HEIGHT;
   const openUpward = spaceAbove >= POPUP_HEIGHT;

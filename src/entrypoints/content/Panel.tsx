@@ -1,7 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getBookmarks, deleteBookmark, updateBookmark, incrementUsage } from '../../shared/storage';
 import type { Bookmark } from '../../shared/types';
-import { parseTokens, matchesTokens, highlight } from '../../shared/search';
+import { parseTokens, filterBookmarks } from '../../shared/search';
+import { WIDGET_HEIGHT, POPUP_MARGIN } from '../../shared/constants';
+import Highlighted from './Highlighted';
+import { useOutsideClick } from './useOutsideClick';
 
 interface PanelProps {
   onClose: () => void;
@@ -21,15 +24,9 @@ export default function Panel({ onClose, onDeleteBookmark, widgetPos }: PanelPro
     getBookmarks().then(setBookmarks);
   }, []);
 
-  // Close on outside click or Escape
+  useOutsideClick(panelRef, onClose);
+
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      const rect = panelRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
-        onClose();
-      }
-    }
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') {
         if (editingId) {
@@ -39,24 +36,12 @@ export default function Panel({ onClose, onDeleteBookmark, widgetPos }: PanelPro
         }
       }
     }
-    const shadowRoot = panelRef.current?.getRootNode() as ShadowRoot | Document;
-    shadowRoot.addEventListener('mousedown', handleClick as EventListener);
-    document.addEventListener('mousedown', handleClick);
     document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      shadowRoot.removeEventListener('mousedown', handleClick as EventListener);
-      document.removeEventListener('mousedown', handleClick);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
+    return () => { document.removeEventListener('keydown', handleKeyDown); };
   }, [onClose, editingId]);
 
   const tokens = parseTokens(query);
-  const filtered = bookmarks
-    .filter(b => {
-      if (!tokens.length) return true;
-      return matchesTokens(b.title, tokens) || matchesTokens(b.path, tokens);
-    })
-    .sort((a, b) => b.usageCount - a.usageCount);
+  const filtered = filterBookmarks(bookmarks, tokens);
 
   function handleSearchKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'ArrowDown') {
@@ -93,13 +78,6 @@ export default function Panel({ onClose, onDeleteBookmark, widgetPos }: PanelPro
     setEditingId(null);
   }
 
-  function Highlighted({ text }: { text: string }) {
-    const parts = highlight(text, tokens);
-    return <>{parts.map((p, i) => typeof p === 'string' ? <span key={i}>{p}</span> : <strong key={i}>{p.bold}</strong>)}</>;
-  }
-
-  const WIDGET_HEIGHT = 58;
-  const POPUP_MARGIN = 8;
   const PANEL_HEIGHT = 400;
   const spaceAbove = window.innerHeight - widgetPos.bottom - WIDGET_HEIGHT;
   const openUpward = spaceAbove >= PANEL_HEIGHT;
@@ -136,8 +114,8 @@ export default function Panel({ onClose, onDeleteBookmark, widgetPos }: PanelPro
                 />
               ) : (
                 <button className="pathpin-panel-link" onClick={() => handleNavigate(bookmark)}>
-                  <span className="pathpin-panel-title"><Highlighted text={bookmark.title} /></span>
-                  <span className="pathpin-panel-path"><Highlighted text={bookmark.path} /></span>
+                  <span className="pathpin-panel-title"><Highlighted text={bookmark.title} tokens={tokens} /></span>
+                  <span className="pathpin-panel-path"><Highlighted text={bookmark.path} tokens={tokens} /></span>
                 </button>
               )}
               <div className="pathpin-panel-actions">

@@ -2,12 +2,12 @@ import ReactDOM from 'react-dom/client';
 import { useState, useEffect, useRef } from 'react';
 import { getRules, getBookmarks, addBookmark, deleteBookmark, getWidgetEnabled, setWidgetEnabled } from '../../shared/storage';
 import { matchesRules } from '../../shared/rules';
+import { WIDGET_STORAGE_KEY } from '../../shared/constants';
 import Widget from './Widget';
 import SavePopup from './SavePopup';
 import Panel from './Panel';
 import QuickModal from './QuickModal';
 
-const STORAGE_KEY = 'pathpin_widget_position';
 const DEFAULT_POS = { bottom: 24, right: 24 };
 
 export default defineContentScript({
@@ -44,8 +44,8 @@ function App() {
   const panelJustClosed = useRef(false);
 
   useEffect(() => {
-    chrome.storage.local.get(STORAGE_KEY).then(r => {
-      if (r[STORAGE_KEY]) setWidgetPos(r[STORAGE_KEY]);
+    chrome.storage.local.get(WIDGET_STORAGE_KEY).then(r => {
+      if (r[WIDGET_STORAGE_KEY]) setWidgetPos(r[WIDGET_STORAGE_KEY]);
     });
   }, []);
 

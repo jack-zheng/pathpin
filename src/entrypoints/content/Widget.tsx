@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import './widget.css';
+import { WIDGET_STORAGE_KEY } from '../../shared/constants';
 import starMarkedUrl from '../../assets/star_marked.svg?url';
 import starUnmarkedUrl from '../../assets/star_unmarked.svg?url';
 import bookmarkUrl from '../../assets/bookmark.svg?url';
@@ -12,7 +13,7 @@ interface WidgetProps {
   setPos: (pos: { bottom: number; right: number }) => void;
 }
 
-const STORAGE_KEY = 'pathpin_widget_position';
+const STORAGE_KEY = WIDGET_STORAGE_KEY;
 
 export default function Widget({ onStarClick, onBookmarkClick, isStarred, pos, setPos }: WidgetProps) {
   const dragging = useRef(false);

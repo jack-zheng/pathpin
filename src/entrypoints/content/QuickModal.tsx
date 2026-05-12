@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { getBookmarks, incrementUsage } from '../../shared/storage';
 import type { Bookmark } from '../../shared/types';
-import { parseTokens, matchesTokens, highlight } from '../../shared/search';
+import { parseTokens, filterBookmarks } from '../../shared/search';
+import Highlighted from './Highlighted';
+import { useOutsideClick } from './useOutsideClick';
 
 interface QuickStarModalProps {
   mode: 'star';
@@ -19,7 +21,9 @@ type QuickModalProps = QuickStarModalProps | QuickSearchModalProps;
 
 export default function QuickModal(props: QuickModalProps) {
   const { mode, onClose } = props;
-  const [title, setTitle] = useState(mode === 'star' ? props.defaultTitle : '');
+  const defaultTitle = mode === 'star' ? props.defaultTitle : '';
+  const onConfirm = mode === 'star' ? props.onConfirm : undefined;
+  const [title, setTitle] = useState(defaultTitle);
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -40,52 +44,32 @@ export default function QuickModal(props: QuickModalProps) {
     }
   }, [mode]);
 
+  useOutsideClick(modalRef, onClose);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') { onClose(); return; }
+      if (mode === 'star' && e.key === 'Enter') {
+        onConfirm!(title);
+        return;
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => { document.removeEventListener('keydown', handleKeyDown); };
+  }, [mode, title, onClose, onConfirm]);
+
   const tokens = parseTokens(query);
-  const filtered = bookmarks
-    .filter(b => {
-      if (!tokens.length) return true;
-      return matchesTokens(b.title, tokens) || matchesTokens(b.path, tokens);
-    })
-    .sort((a, b) => b.usageCount - a.usageCount);
+  const filtered = filterBookmarks(bookmarks, tokens);
 
   async function handleNavigate(bookmark: Bookmark) {
     await incrementUsage(bookmark.id);
     window.location.href = window.location.origin + bookmark.path;
   }
 
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') { onClose(); return; }
-      if (mode === 'star' && e.key === 'Enter') {
-        (props as QuickStarModalProps).onConfirm(title);
-        return;
-      }
-    }
-    function handleClick(e: MouseEvent) {
-      const rect = modalRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) onClose();
-    }
-    const shadowRoot = modalRef.current?.getRootNode() as ShadowRoot | Document;
-    document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('mousedown', handleClick);
-    shadowRoot.addEventListener('mousedown', handleClick as EventListener);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('mousedown', handleClick);
-      shadowRoot.removeEventListener('mousedown', handleClick as EventListener);
-    };
-  }, [mode, title, onClose, props]);
-
   function handleSearchKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'ArrowDown') { e.preventDefault(); setSelectedIndex(i => Math.min(i + 1, filtered.length - 1)); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); setSelectedIndex(i => Math.max(i - 1, 0)); }
     else if (e.key === 'Enter' && filtered[selectedIndex]) { e.preventDefault(); handleNavigate(filtered[selectedIndex]); }
-  }
-
-  function Highlighted({ text }: { text: string }) {
-    const parts = highlight(text, tokens);
-    return <>{parts.map((p, i) => typeof p === 'string' ? <span key={i}>{p}</span> : <strong key={i}>{p.bold}</strong>)}</>;
   }
 
   return (
@@ -118,8 +102,8 @@ export default function QuickModal(props: QuickModalProps) {
               {filtered.map((bookmark, idx) => (
                 <li key={bookmark.id} className={`pathpin-panel-item${idx === selectedIndex ? ' selected' : ''}`}>
                   <button className="pathpin-panel-link" onClick={() => handleNavigate(bookmark)}>
-                    <span className="pathpin-panel-title"><Highlighted text={bookmark.title} /></span>
-                    <span className="pathpin-panel-path"><Highlighted text={bookmark.path} /></span>
+                    <span className="pathpin-panel-title"><Highlighted text={bookmark.title} tokens={tokens} /></span>
+                    <span className="pathpin-panel-path"><Highlighted text={bookmark.path} tokens={tokens} /></span>
                   </button>
                 </li>
               ))}

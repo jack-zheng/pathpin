@@ -19,11 +19,24 @@ export function matchesTokens(text: string, tokens: string[]): boolean {
  */
 export function highlight(text: string, tokens: string[]): (string | { bold: string })[] {
   if (!tokens.length) return [text];
-  // Build a regex that matches any token (case-insensitive)
   const escaped = tokens.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
   const regex = new RegExp(`(${escaped.join('|')})`, 'gi');
   const parts = text.split(regex);
   return parts.map(part =>
     tokens.some(t => part.toLowerCase() === t.toLowerCase()) ? { bold: part } : part
   );
+}
+
+import type { Bookmark } from './types';
+
+/**
+ * Filter and sort bookmarks by tokens (AND logic), sorted by usageCount desc.
+ */
+export function filterBookmarks(bookmarks: Bookmark[], tokens: string[]): Bookmark[] {
+  return bookmarks
+    .filter(b => {
+      if (!tokens.length) return true;
+      return matchesTokens(b.title, tokens) || matchesTokens(b.path, tokens);
+    })
+    .sort((a, b) => b.usageCount - a.usageCount);
 }
