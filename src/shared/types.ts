@@ -8,7 +8,7 @@ export interface Bookmark {
 
 export interface Rule {
   id: string;
-  type: 'url_contains' | 'title_contains';
+  type: 'url_contains' | 'domain_equals';
   value: string;
 }
 

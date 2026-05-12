@@ -4,7 +4,7 @@ import type { Rule, StorageData } from '../../shared/types';
 
 export default function App() {
   const [rules, setRules] = useState<Rule[]>([]);
-  const [newType, setNewType] = useState<Rule['type']>('url_contains');
+  const [newType, setNewType] = useState<Rule['type']>('domain_equals');
   const [newValue, setNewValue] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState('');
@@ -79,7 +79,7 @@ export default function App() {
         <ul style={s.list}>
           {rules.map(rule => (
             <li key={rule.id} style={s.item}>
-              <span style={s.badge}>{rule.type === 'url_contains' ? 'URL' : 'Title'}</span>
+              <span style={s.badge}>{rule.type === 'url_contains' ? 'URL:co' : 'Dom:eq'}</span>
               {editingId === rule.id ? (
                 <input
                   style={s.editInput}
@@ -106,8 +106,8 @@ export default function App() {
 
       <div style={s.addRow}>
         <select style={s.select} value={newType} onChange={e => setNewType(e.target.value as Rule['type'])}>
+          <option value="domain_equals">Domain equals</option>
           <option value="url_contains">URL contains</option>
-          <option value="title_contains">Title contains</option>
         </select>
         <input
           style={s.input}
@@ -140,7 +140,7 @@ const s: Record<string, React.CSSProperties> = {
   list: { listStyle: 'none', padding: 0, margin: '0 0 12px' },
   item: { display: 'flex', alignItems: 'center', gap: 6, padding: '6px 0', borderBottom: '1px solid #f3f4f6' },
   badge: { fontSize: 10, background: '#e0e7ff', color: '#4338ca', borderRadius: 4, padding: '2px 5px', flexShrink: 0 },
-  value: { flex: 1, fontSize: 12 },
+  value: { flex: 1, fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 },
   editInput: { flex: 1, fontSize: 12, border: '1px solid #6366f1', borderRadius: 4, padding: '2px 6px', outline: 'none' },
   actions: { display: 'flex', gap: 4 },
   addRow: { display: 'flex', gap: 6, alignItems: 'center' },

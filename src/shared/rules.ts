@@ -6,8 +6,13 @@ export function matchesRules(rules: Rule[], url: string, title: string): boolean
     if (rule.type === 'url_contains') {
       return url.toLowerCase().includes(rule.value.toLowerCase());
     }
-    if (rule.type === 'title_contains') {
-      return title.toLowerCase().includes(rule.value.toLowerCase());
+    if (rule.type === 'domain_equals') {
+      try {
+        const domain = new URL(url).hostname;
+        return domain.toLowerCase() === rule.value.toLowerCase();
+      } catch {
+        return false;
+      }
     }
     return false;
   });
