@@ -1,16 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 
-interface SavePopupProps {
+interface QuickSaveModalProps {
   defaultTitle: string;
-  widgetPos: { bottom: number; right: number };
   onConfirm: (title: string) => void;
   onCancel: () => void;
 }
 
-export default function SavePopup({ defaultTitle, widgetPos, onConfirm, onCancel }: SavePopupProps) {
+export default function QuickSaveModal({ defaultTitle, onConfirm, onCancel }: QuickSaveModalProps) {
   const [title, setTitle] = useState(defaultTitle);
   const inputRef = useRef<HTMLInputElement>(null);
-  const popupRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const input = inputRef.current;
@@ -25,11 +24,11 @@ export default function SavePopup({ defaultTitle, widgetPos, onConfirm, onCancel
       if (e.key === 'Enter') onConfirm(title);
     }
     function handleClick(e: MouseEvent) {
-      const rect = popupRef.current?.getBoundingClientRect();
+      const rect = modalRef.current?.getBoundingClientRect();
       if (!rect) return;
       if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) onCancel();
     }
-    const shadowRoot = popupRef.current?.getRootNode() as ShadowRoot | Document;
+    const shadowRoot = modalRef.current?.getRootNode() as ShadowRoot | Document;
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('mousedown', handleClick);
     shadowRoot.addEventListener('mousedown', handleClick as EventListener);
@@ -40,17 +39,8 @@ export default function SavePopup({ defaultTitle, widgetPos, onConfirm, onCancel
     };
   }, [title, onConfirm, onCancel]);
 
-  const WIDGET_HEIGHT = 58;
-  const POPUP_MARGIN = 8;
-  const POPUP_HEIGHT = 90;
-  const spaceAbove = window.innerHeight - widgetPos.bottom - WIDGET_HEIGHT;
-  const openUpward = spaceAbove >= POPUP_HEIGHT;
-  const posStyle: React.CSSProperties = openUpward
-    ? { bottom: widgetPos.bottom + WIDGET_HEIGHT + POPUP_MARGIN, right: widgetPos.right }
-    : { top: window.innerHeight - widgetPos.bottom + POPUP_MARGIN, right: widgetPos.right };
-
   return (
-    <div className="pathpin-popup" ref={popupRef} style={posStyle}>
+    <div className="pathpin-quick-save" ref={modalRef}>
       <input
         ref={inputRef}
         className="pathpin-popup-input"

@@ -5,6 +5,7 @@ import { matchesRules } from '../../shared/rules';
 import Widget from './Widget';
 import SavePopup from './SavePopup';
 import Panel from './Panel';
+import QuickSaveModal from './QuickSaveModal';
 
 const STORAGE_KEY = 'pathpin_widget_position';
 const DEFAULT_POS = { bottom: 24, right: 24 };
@@ -37,6 +38,7 @@ function App() {
   const [savedId, setSavedId] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
+  const [showQuickSave, setShowQuickSave] = useState(false);
   const [widgetPos, setWidgetPos] = useState(DEFAULT_POS);
   const panelJustClosed = useRef(false);
 
@@ -73,12 +75,35 @@ function App() {
     setIsStarred(true);
     setSavedId(bookmark.id);
     setShowPopup(false);
+    setShowQuickSave(false);
   }
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.altKey && (e.key === 's' || e.key === 'ß')) {
+        e.preventDefault();
+        if (isStarred && savedId) {
+          deleteBookmark(savedId).then(() => { setIsStarred(false); setSavedId(null); });
+        } else {
+          setShowQuickSave(true);
+        }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isStarred, savedId]);
 
   if (!visible) return null;
 
   return (
     <>
+      {showQuickSave && (
+        <QuickSaveModal
+          defaultTitle={document.title}
+          onConfirm={handleSaveConfirm}
+          onCancel={() => setShowQuickSave(false)}
+        />
+      )}
       {showPopup && (
         <SavePopup
           defaultTitle={document.title}
