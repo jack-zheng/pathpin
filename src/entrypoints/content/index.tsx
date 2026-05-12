@@ -1,6 +1,6 @@
 import ReactDOM from 'react-dom/client';
 import { useState, useEffect, useRef } from 'react';
-import { getRules, getBookmarks, addBookmark, deleteBookmark, getWidgetEnabled } from '../../shared/storage';
+import { getRules, getBookmarks, addBookmark, deleteBookmark, getWidgetEnabled, setWidgetEnabled } from '../../shared/storage';
 import { matchesRules } from '../../shared/rules';
 import Widget from './Widget';
 import SavePopup from './SavePopup';
@@ -93,6 +93,14 @@ function App() {
       if (e.altKey && e.code === 'KeyB') {
         e.preventDefault();
         setShowQuickSearch(true);
+      }
+      if (e.altKey && e.code === 'KeyH') {
+        e.preventDefault();
+        setWidgetVisible(prev => {
+          const next = !prev;
+          setWidgetEnabled(next);
+          return next;
+        });
       }
     }
     document.addEventListener('keydown', handleKeyDown);

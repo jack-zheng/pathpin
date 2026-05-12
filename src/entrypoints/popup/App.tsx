@@ -124,7 +124,7 @@ export default function App() {
       <hr style={s.divider} />
 
       <div style={s.toggleRow}>
-        <span style={s.toggleLabel}>Show widget</span>
+        <span style={s.toggleLabel}>Floating widget</span>
         <label style={s.switch}>
           <input
             type="checkbox"
@@ -132,7 +132,9 @@ export default function App() {
             onChange={e => { setWidgetEnabledState(e.target.checked); setWidgetEnabled(e.target.checked); }}
             style={{ display: 'none' }}
           />
-          <span style={{ ...s.slider, ...(widgetEnabled ? s.sliderOn : {}) }} />
+          <span style={{ ...s.slider, ...(widgetEnabled ? s.sliderOn : {}) }}>
+            <span style={{ ...s.knob, ...(widgetEnabled ? s.knobOn : {}) }} />
+          </span>
         </label>
       </div>
 
@@ -169,9 +171,11 @@ const s: Record<string, React.CSSProperties> = {
   divider: { border: 'none', borderTop: '1px solid #f3f4f6', margin: '16px 0' },
   toggleRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
   toggleLabel: { fontSize: 12, color: '#374151' },
-  switch: { position: 'relative' as const, display: 'inline-block', width: 32, height: 18, cursor: 'pointer' },
-  slider: { position: 'absolute' as const, inset: 0, background: '#d1d5db', borderRadius: 18, transition: '0.2s', display: 'block' } as React.CSSProperties,
+  switch: { position: 'relative' as const, display: 'inline-block', width: 36, height: 20, cursor: 'pointer', flexShrink: 0 },
+  slider: { position: 'absolute' as const, inset: 0, background: '#d1d5db', borderRadius: 20 } as React.CSSProperties,
   sliderOn: { background: '#6366f1' } as React.CSSProperties,
+  knob: { position: 'absolute' as const, top: 2, left: 2, width: 16, height: 16, background: '#fff', borderRadius: '50%', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' } as React.CSSProperties,
+  knobOn: { left: 18 } as React.CSSProperties,
   dataRow: { display: 'flex', gap: 8 },
   status: { fontSize: 11, color: '#6b7280', marginTop: 8 },
 };
