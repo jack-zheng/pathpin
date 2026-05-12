@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { getBookmarks, incrementUsage } from '../../shared/storage';
 import type { Bookmark } from '../../shared/types';
+import { parseTokens, matchesTokens, highlight } from '../../shared/search';
 
 interface QuickStarModalProps {
   mode: 'star';
@@ -39,11 +40,11 @@ export default function QuickModal(props: QuickModalProps) {
     }
   }, [mode]);
 
+  const tokens = parseTokens(query);
   const filtered = bookmarks
     .filter(b => {
-      const q = query.trim().toLowerCase();
-      if (!q) return true;
-      return b.title.toLowerCase().includes(q) || b.path.toLowerCase().includes(q);
+      if (!tokens.length) return true;
+      return matchesTokens(b.title, tokens) || matchesTokens(b.path, tokens);
     })
     .sort((a, b) => b.usageCount - a.usageCount);
 
@@ -82,6 +83,11 @@ export default function QuickModal(props: QuickModalProps) {
     else if (e.key === 'Enter' && filtered[selectedIndex]) { e.preventDefault(); handleNavigate(filtered[selectedIndex]); }
   }
 
+  function Highlighted({ text }: { text: string }) {
+    const parts = highlight(text, tokens);
+    return <>{parts.map((p, i) => typeof p === 'string' ? <span key={i}>{p}</span> : <strong key={i}>{p.bold}</strong>)}</>;
+  }
+
   return (
     <div className="pathpin-quick-modal" ref={modalRef}>
       {mode === 'star' ? (
@@ -112,8 +118,8 @@ export default function QuickModal(props: QuickModalProps) {
               {filtered.map((bookmark, idx) => (
                 <li key={bookmark.id} className={`pathpin-panel-item${idx === selectedIndex ? ' selected' : ''}`}>
                   <button className="pathpin-panel-link" onClick={() => handleNavigate(bookmark)}>
-                    <span className="pathpin-panel-title">{bookmark.title}</span>
-                    <span className="pathpin-panel-path">{bookmark.path}</span>
+                    <span className="pathpin-panel-title"><Highlighted text={bookmark.title} /></span>
+                    <span className="pathpin-panel-path"><Highlighted text={bookmark.path} /></span>
                   </button>
                 </li>
               ))}
